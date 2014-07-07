@@ -85,10 +85,10 @@ public class TabbedInterface extends JFrame {
 	private Button button_2;
 	private Button button_3;
 	private String fname,lname,minit,author_name,book_id,title,author_name_text_field,
-	book_id_text_field,title_text_field,branch_id,no_of_copies,no_of_available;
+	book_id_text_field,title_text_field,branch_id,no_of_copies,no_of_available,card_no;
 	private DefaultTableModel model;
 	private DataBaseQueryGenerator queryGenerate;
-	private TableColumnModel tcm;
+	private JLabel lblNewLabel_4;
 
 	/**
 	 * Create the frame.
@@ -137,6 +137,7 @@ public class TabbedInterface extends JFrame {
 
 	private void actionListeners()
 	{
+		//Toggle detailed - normal search
 		checkbox.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent arg0) {
 				if(label_2.isVisible()) //author is visible
@@ -156,6 +157,7 @@ public class TabbedInterface extends JFrame {
 			}
 		});
 
+		//reset
 		button_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				textField.setText("");
@@ -169,6 +171,7 @@ public class TabbedInterface extends JFrame {
 			}
 		});
 
+		//search
 		button_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if(!checkbox.isSelected()) // not detailed
@@ -202,7 +205,7 @@ public class TabbedInterface extends JFrame {
 					}
 
 				}
-				else
+				else //detailed search
 				{
 					book_id_text_field = textField.getText().trim();
 					title_text_field = textField_1.getText().trim();
@@ -235,6 +238,50 @@ public class TabbedInterface extends JFrame {
 					}
 				}
 				panel.doLayout();
+			}
+		});
+		
+		//check out
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				book_id = textField_6.getText();
+				branch_id = textField_7.getText();
+				card_no = textField_8.getText();
+				//check if the entered book_id, branch_id and card_no exist
+				if(book_id.equals("") || !queryGenerate.isValidBookID(book_id))
+				{
+					lblNewLabel_4.setText("Invalid book ID");
+				}
+				else if(branch_id.equals("") || !queryGenerate.isValidBranchID(branch_id))
+				{
+					lblNewLabel_4.setText("Invalid branch ID");
+				}
+				else if(card_no.equals("") || !queryGenerate.isValidCardNo(card_no))
+				{
+					lblNewLabel_4.setText("Invalid Card number");
+				}
+				else if(!queryGenerate.isValidCheckOut(card_no))
+				{
+					lblNewLabel_4.setText("Check out limit for user reached");
+				}
+				else if(!queryGenerate.isBookAvailable(book_id, branch_id))
+				{
+					lblNewLabel_4.setText("Sorry, the book is out of stock at the current branch :-( ");
+				}
+				else
+				{
+					queryGenerate.CheckOutBook(book_id, branch_id, card_no);
+				}
+			}
+		});
+		
+		//reset check-out
+		button_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				textField_6.setText("");
+				textField_7.setText("");
+				lblNewLabel_4.setText("");
+				textField_8.setText("");
 			}
 		});
 	}
@@ -286,16 +333,18 @@ public class TabbedInterface extends JFrame {
 		textField_8.setColumns(10);
 
 		panel_9 = new JPanel();
-		panel_9.setBounds(0, 145, 990, 144);
+		panel_9.setBounds(0, 145, 990, 74);
 		panel_1.add(panel_9);
 		panel_9.setLayout(null);
 
-		button = new Button("Check In");
+		button = new Button("Check Out");
+		
 		button.setBackground(new Color(192, 192, 192));
 		button.setBounds(347, 5, 78, 34);
 		panel_9.add(button);
 
 		button_1 = new Button("Reset");
+		
 		button_1.setBackground(new Color(192, 192, 192));
 		button_1.setBounds(568, 5, 100, 34);
 		panel_9.add(button_1);
@@ -303,11 +352,17 @@ public class TabbedInterface extends JFrame {
 		panel_8 = new JPanel();
 		panel_8.setBounds(0, 225, 990, 208);
 		panel_1.add(panel_8);
+		panel_8.setLayout(null);
 
-		lblNewLabel_3 = new JLabel("New label");
+		lblNewLabel_3 = new JLabel("Info:");
+		lblNewLabel_3.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_3.setBounds(404, 5, 103, 25);
 		panel_8.add(lblNewLabel_3);
-
-		lblNewLabel_3.setVisible(false);
+		
+		lblNewLabel_4 = new JLabel("");
+		lblNewLabel_4.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblNewLabel_4.setBounds(165, 73, 538, 38);
+		panel_8.add(lblNewLabel_4);
 	}
 	
 	private void setUpPanel0()
