@@ -25,6 +25,41 @@ public class LibraryController {
 		
 		this.theView.addUserInputListener(new PopulateData());
 		this.theView.addBookSelectListener(new TableClickData());
+		this.theView.addCheckOutListener(new CheckOutClickData());
+	}
+	
+	/*
+	 * Check out book
+	 */
+	class CheckOutClickData implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			CheckOutData data = theView.getCheckOutData();
+			if(!qGen.isValidBookID(data.getBook_id())){
+				theView.setCheckOutPaneInfo("Invalid Book ID");
+				return;
+			}
+			else if(!qGen.isValidBranchID(data.getBranch_id())){
+				theView.setCheckOutPaneInfo("Invalid Branch ID");
+				return;
+			}
+			else if(!qGen.isValidCardNo(data.getCardNumber())){
+				theView.setCheckOutPaneInfo("Invalid Card Number");
+				return;
+			}
+			else if(!qGen.isValidCheckOut(data.getCardNumber())){
+				theView.setCheckOutPaneInfo("Maximum checkouts exceeded");
+				return;
+			}
+			if(qGen.CheckOutBook(data.getBook_id(), data.getBranch_id(), data.getCardNumber())){
+				theView.setCheckOutPaneInfo("Successfully checked out");
+				return;
+			}
+			theView.setCheckOutPaneInfo("Error checking out");
+			
+		}
+		
 	}
 
 	/*
@@ -62,9 +97,8 @@ public class LibraryController {
 	        	CheckOutData data = new CheckOutData();
 	        	data.setBook_id((String)table.getModel().getValueAt(row, 0));
 	        	data.setBranch_id((String)table.getModel().getValueAt(row, 3));
-	        	theView.getCheckOutData(data);
+	        	theView.sendDataToCheckOut(data);
 	        }
-	            System.out.println(row); 
 			
 		}
 

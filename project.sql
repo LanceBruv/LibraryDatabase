@@ -224,3 +224,8 @@ CREATE VIEW combined_authors AS
 SELECT book_id,title, GROUP_CONCAT(author_name SEPARATOR ',') AS author_list
 FROM (book_authors NATURAL JOIN book)
 GROUP BY book_id;
+
+--user checkouts view
+CREATE VIEW user_checkouts AS
+SELECT card_no,count(*) AS no_checkouts FROM book_loans
+GROUP BY card_no;

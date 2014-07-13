@@ -31,5 +31,11 @@ public interface ViewInterface {
 	
 	public void getInfo(String info);
 	
-	public void getCheckOutData(CheckOutData data);
+	public void sendDataToCheckOut(CheckOutData data);
+	
+	public void addCheckOutListener(ActionListener action);
+	
+	public CheckOutData getCheckOutData();
+	
+	public void setCheckOutPaneInfo(String info);
 }

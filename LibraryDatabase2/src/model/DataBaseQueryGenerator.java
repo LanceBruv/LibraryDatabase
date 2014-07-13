@@ -123,7 +123,7 @@ public class DataBaseQueryGenerator {
 		try
 		{
 			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT book_id from BOOK where book_id ="+book_id+"");
+			ResultSet rs = stmt.executeQuery("SELECT book_id from BOOK where book_id ='"+book_id+"'");
 			if(rs.next())
 			{
 				return true;
@@ -148,7 +148,7 @@ public class DataBaseQueryGenerator {
 		try
 		{
 			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT branch_id from library_branch where branch_id ="+branch_id+"");
+			ResultSet rs = stmt.executeQuery("SELECT branch_id from library_branch where branch_id ='"+branch_id+"'");
 			if(rs.next())
 			{
 				return true;
@@ -172,7 +172,7 @@ public class DataBaseQueryGenerator {
 		try
 		{
 			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT card_no from borrower where card_no ="+card_no+"");
+			ResultSet rs = stmt.executeQuery("SELECT card_no from borrower where card_no ='"+card_no+"'");
 			if(rs.next())
 			{
 				return true;
@@ -195,10 +195,10 @@ public class DataBaseQueryGenerator {
 		try
 		{
 			Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT * from borrower where card_no ="+card_no+"");
+			ResultSet rs = stmt.executeQuery("SELECT * from user_checkouts where card_no ="+card_no+"");
 			if(rs.next())
 			{
-				int no_ofCheckouts = Integer.parseInt(rs.getString("no_borrowed"));
+				int no_ofCheckouts = Integer.parseInt(rs.getString("no_checkouts"));
 				return(no_ofCheckouts <3);
 			}
 			
@@ -206,7 +206,7 @@ public class DataBaseQueryGenerator {
 		catch(SQLException ex) {
 			System.out.println("Error in connection: " + ex.getMessage());
 		}
-		return false;
+		return true; //empty set
 	}
 	
 	/*
@@ -239,7 +239,7 @@ public class DataBaseQueryGenerator {
 	 * Check out the book, add a row to the loans column
 	 * update the borrower table no_borrowed and no_of_copies table no_available
 	 */
-	public void CheckOutBook(String book_id,String branch_id,String card_no)
+	public boolean CheckOutBook(String book_id,String branch_id,String card_no)
 	{
 		try
 		{			Statement stmt = conn.createStatement();
@@ -251,16 +251,15 @@ public class DataBaseQueryGenerator {
 					+ " AND branch_id ='"+branch_id+"' AND card_no = '"+card_no+"';";
 			stmt.execute(statement);
 			//update number of books available
-			statement = "UPDATE book_copies SET available_copies = available_copies - 1 WHERE book_id = '"+book_id+"'"
+			statement = "UPDATE book_copies SET no_available = no_available - 1 WHERE book_id = '"+book_id+"'"
 					+ " AND branch_id ='"+branch_id+"';";
 			stmt.execute(statement);
-			//update number of books borrowed
-			statement = "UPDATE borrower SET no_borrowed = no_borrowed +1 WHERE card_no = '"+card_no+"';";
-			stmt.execute(statement);
+			return true;
 		}
 		catch(SQLException ex) {
 			System.out.println("Error in connection: " + ex.getMessage());
 		}
+		return false;
 	}
 	
 	public void resetSchema()

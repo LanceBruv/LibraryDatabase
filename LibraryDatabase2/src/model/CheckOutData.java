@@ -4,7 +4,7 @@ public class CheckOutData {
 
 	private String book_id;
 	private String branch_id;
-	private int cardNumber;
+	private String cardNumber;
 	
 	public String getBook_id() {
 		return book_id;
@@ -18,10 +18,10 @@ public class CheckOutData {
 	public void setBranch_id(String branch_id) {
 		this.branch_id = branch_id;
 	}
-	public int getCardNumber() {
+	public String getCardNumber() {
 		return cardNumber;
 	}
-	public void setCardNumber(int cardNumber) {
+	public void setCardNumber(String cardNumber) {
 		this.cardNumber = cardNumber;
 	}
 	

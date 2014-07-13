@@ -9,6 +9,8 @@ import java.awt.Point;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
@@ -32,10 +34,14 @@ import java.awt.event.MouseListener;
 import javax.swing.JTable;
 
 import model.CheckOutData;
+
 import javax.swing.SwingConstants;
+
 import java.awt.GridLayout;
 import java.awt.CardLayout;
+
 import javax.swing.SpringLayout;
+
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
@@ -64,6 +70,9 @@ public class UserView extends JFrame implements ViewInterface{
 	private JTextField cardNumberCheckoutTextField;
 	private JLabel errorMessageLabel;
 	private JTabbedPane tabbedPane;
+	private JFrame frame;
+	private JButton checkOutButton;
+	private JLabel checkOutInfoLabel;
 	
 	@Override
 	public String getBookID() {
@@ -129,25 +138,58 @@ public class UserView extends JFrame implements ViewInterface{
 	}
 	
 	@Override
-	public void getCheckOutData(CheckOutData data){
+	public void sendDataToCheckOut(CheckOutData data){
 		tabbedPane.setSelectedIndex(1);
 		bookIDCheckoutTextField.setText(data.getBook_id());
 		branchIDCheckoutTextField.setText(data.getBranch_id());
 	}
-
+	
+	@Override
+	public void addCheckOutListener(ActionListener action){
+		checkOutButton.addActionListener(action);
+	}
+	
+	@Override
+	public CheckOutData getCheckOutData(){
+		CheckOutData data = new CheckOutData();
+		data.setBook_id(bookIDCheckoutTextField.getText());
+		data.setBranch_id(branchIDCheckoutTextField.getText());
+		data.setCardNumber(cardNumberCheckoutTextField.getText());
+		return data;
+	}
+	
+	@Override
+	public void setCheckOutPaneInfo(String info){
+		checkOutInfoLabel.setText(info);
+	}
+	
 	/**
 	 * Create the frame.
 	 */
 	public UserView() { 
 		
+		frame = this;
 		this.setSize(getMaximumSize());
-		setTitle("Library");
+		this.setTitle("Library");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		contentPanel = new JPanel();
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPanel.setLayout(new BorderLayout(0,0));
 		setContentPane(contentPanel);
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int index = tabbedPane.getSelectedIndex();
+				if(index == 0){
+					frame.setSize(getMaximumSize());
+				}
+				else if(index == 1){
+					frame.setSize(400,250);
+				}
+			}
+		});
 		contentPanel.add(tabbedPane, BorderLayout.CENTER);
 		
 		/*
@@ -298,7 +340,7 @@ public class UserView extends JFrame implements ViewInterface{
 		JPanel checkoutOptionsPanel = new JPanel();
 		//checkoutOptionsPanel.setLayout(new BoxLayout(checkoutOptionsPanel,BoxLayout.Y_AXIS ));
 		checkOutPanel.add(checkoutOptionsPanel);
-		checkoutOptionsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+		checkoutOptionsPanel.setLayout(new GridLayout(5, 6, 0, 0));
 		
 		JLabel bookIDCheckOutLabel = new JLabel("Book ID");
 		checkoutOptionsPanel.add(bookIDCheckOutLabel);
@@ -324,15 +366,46 @@ public class UserView extends JFrame implements ViewInterface{
 		checkoutOptionsPanel.add(cardNumberCheckoutTextField);
 		cardNumberCheckoutTextField.setColumns(10);
 		
-		JLabel checkOutInfoLabel = new JLabel("New label");
-		checkoutOptionsPanel.add(checkOutInfoLabel);
-		//checkOutPanel.setLayout(new FlowLayout());
+		JPanel checkOutButtonPanel1 = new JPanel();
+		checkoutOptionsPanel.add(checkOutButtonPanel1);
+		checkOutButtonPanel1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
+		checkOutButton = new JButton("Check Out");
+		checkOutButtonPanel1.add(checkOutButton);
+		
+		JButton checkOutResetButton = new JButton("Reset");
+		checkOutButtonPanel1.add(checkOutResetButton);
+		
+		JPanel checkOutInfoPanel = new JPanel();
+		checkoutOptionsPanel.add(checkOutInfoPanel);
+		checkOutInfoPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
+		checkOutInfoLabel = new JLabel("");
+		checkOutInfoPanel.add(checkOutInfoLabel);
+
+		checkOutResetButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				resetText();
+			}
+		});
+
 		/*
 		 * Check In panel
 		 */
 		JPanel checkInPanel = new JPanel();
 		tabbedPane.addTab("Check In", null, checkInPanel, null);
+		checkInPanel.setLayout(new GridLayout(2, 2, 0, 0));
+		
+		JButton btnNewButton_2 = new JButton("New button");
+		checkInPanel.add(btnNewButton_2);
+		
+		JButton btnNewButton_1 = new JButton("New button");
+		checkInPanel.add(btnNewButton_1);
+		
+		JButton btnNewButton = new JButton("New button");
+		checkInPanel.add(btnNewButton);
 		
 		/*
 		 * Borrower panel
@@ -351,6 +424,9 @@ public class UserView extends JFrame implements ViewInterface{
 		authorNameTextField.setText("");
 		titleTextField.setText("");
 		tableModel.setRowCount(0);
+		bookIDCheckoutTextField.setText("");
+		branchIDCheckoutTextField.setText("");
+		cardNumberCheckoutTextField.setText("");
 	}
 	
 	public void resizeColumnWidth(JTable table) {
