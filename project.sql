@@ -145,9 +145,45 @@ add available_copies INT;
 UPDATE book_copies
 SET available_copies = no_of_copies;
 
---doesn't work as intended
-CREATE VIEW search_result AS
-select book.book_id,title, author_name, fname,minit,lname,book_copies.branch_id,no_of_copies,available_copies from
---doesn't work as intended
-( (book NATURAL JOIN book_authors) NATURAL JOIN book_copies);
+ALTER TABLE borrower 
+ADD COLUMN no_borrowed INT DEFAULT '0';
+
+--begin not used
+--create trigger for check out	
+CREATE TRIGGER update_book_count_borrower
+AFTER INSERT ON book_loans
+FOR EACH ROW
+UPDATE borrower
+SET no_borrowed = no_borrowed+1
+WHERE card_no = new.card_no;	
+
+--cannot create multiple triggers
+CREATE TRIGGER update_book_count
+AFTER INSERT ON book_loans
+FOR EACH ROW
+UPDATE book_copies
+SET no_available = no_available-1
+WHERE book_id = new.book_id AND
+branch_id = new.branch_id;
+--cannot create multiple triggers
+
+--create a cascading trigger
+CREATE TRIGGER update_book_count_copies
+AFTER UPDATE ON borrower
+FOR EACH ROW
+UPDATE book_copies
+SET book_copies = book_copies -1
+WHERE book_id = new.book_id AND
+branch_id = new.branch_id;
+--cannot trigger view
+CREATE TRIGGER update_book_count_borrower
+AFTER INSERT ON book_loans
+FOR EACH ROW
+UPDATE update_copies
+SET no_borrowed = no_borrowed+1,
+no_of_copies = no_of_copies -1
+WHERE card_no = new.card_no AND
+book_id = new.book_id AND
+branch_id = new.branch_id;
+-- end not used
 
