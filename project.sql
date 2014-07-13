@@ -187,3 +187,40 @@ book_id = new.book_id AND
 branch_id = new.branch_id;
 -- end not used
 
+--remove available_books and no_borrwed (make these values robust)
+ALTER TABLE borrower DROP no_borrowed;
+ALTER TABLE book_copies DROP no_available;
+
+--try to simplify
+--create checkouts view
+CREATE VIEW checkouts AS
+SELECT book_id,branch_id,count(*) AS num_checkouts FROM book_loans 
+GROUP BY book_id,branch_id;
+
+--create a view for available books
+CREATE VIEW num_checked_out AS
+SELECT book_copies.book_id,book_copies.branch_id,no_of_copies,count(*) as test1,no_of_copies - IFNULL(count(*),0) AS num_checked_out 
+FROM book_copies LEFT JOIN checkouts ON (book_copies.book_id = checkouts.book_id) AND 
+book_copies.branch_id = checkouts.branch_id
+GROUP BY num_checkouts;
+
+--test
+SELECT book_copies.book_id,book_copies.branch_id,no_of_copies,IFNULL(count(*),0) as test1
+FROM book_copies LEFT JOIN checkouts ON (book_copies.book_id = checkouts.book_id) AND 
+book_copies.branch_id = checkouts.branch_id
+GROUP BY num_checkouts;
+
+--create view for difference
+CREATE VIEW num_available AS
+SELECT book_id,branch_id,(no_of_copies - num_checked_out ) AS num_available
+FROM (book_copies NATURAL JOIN num_checked_out);
+--end try to simplify
+
+
+--drop temp authors as its not in 1NF
+DROP TABLE temp_authors;
+--create a view for combined authors
+CREATE VIEW combined_authors AS
+SELECT book_id,title, GROUP_CONCAT(author_name SEPARATOR ',') AS author_list
+FROM (book_authors NATURAL JOIN book)
+GROUP BY book_id;

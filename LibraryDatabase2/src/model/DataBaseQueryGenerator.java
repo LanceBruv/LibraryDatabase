@@ -29,8 +29,8 @@ public class DataBaseQueryGenerator {
 	public ResultSet getBooks(String book_id,String title,String author)
 	{
 		ResultSet rs = null;
-		String resultQuery="SELECT book_id,title,author_name,branch_id,no_of_copies, available_copies FROM "
-				+ "(temp_author NATURAL JOIN book_copies) "
+		String resultQuery="SELECT book_id,title,author_list,branch_id,no_of_copies,no_available FROM "
+				+ "(book_copies NATURAL JOIN combined_authors) "
 				+ "WHERE ";
 		try{
 			Statement stmt = conn.createStatement();
@@ -46,7 +46,7 @@ public class DataBaseQueryGenerator {
 			}
 			if(!author.isEmpty())
 			{
-				resultQuery+= "author_name like '%"+author+"%' AND ";
+				resultQuery+= "author_list like '%"+author+"%' AND ";
 			}
 			
 			resultQuery += "true ;";
@@ -72,9 +72,9 @@ public class DataBaseQueryGenerator {
 	public ResultSet getBooks(String book_id,String title,String fname,String minit,String lname)
 	{
 		ResultSet rs = null;
-		String resultQuery="SELECT DISTINCT book_copies.book_id,title,temp_author.author_name,branch_id,no_of_copies, available_copies FROM "
-				+ "((temp_author LEFT JOIN book_copies ON temp_author.book_id = book_copies.book_id)"
-				+ " LEFT JOIN book_authors ON temp_author.book_id = book_authors.book_id)  "
+		String resultQuery="SELECT DISTINCT book_copies.book_id,title,combined_authors.author_list,branch_id,no_of_copies, no_available FROM "
+				+ "((combined_authors LEFT JOIN book_copies ON combined_authors.book_id = book_copies.book_id)"
+				+ " LEFT JOIN book_authors ON combined_authors.book_id = book_authors.book_id)  "
 				+ "WHERE ";
 		try{
 			Statement stmt = conn.createStatement();

@@ -25,5 +25,11 @@ public interface ViewInterface {
 
 	public void addUserInputListener(ActionListener action);
 	
-	public CheckOutData addBookSelectListener(MouseListener getDoubleClick);
+	public void addBookSelectListener(MouseListener getDoubleClick);
+	
+	public void resetTable();
+	
+	public void getInfo(String info);
+	
+	public void getCheckOutData(CheckOutData data);
 }

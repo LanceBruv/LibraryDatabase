@@ -32,6 +32,13 @@ import java.awt.event.MouseListener;
 import javax.swing.JTable;
 
 import model.CheckOutData;
+import javax.swing.SwingConstants;
+import java.awt.GridLayout;
+import java.awt.CardLayout;
+import javax.swing.SpringLayout;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.RowSpec;
 
 public class UserView extends JFrame implements ViewInterface{
 
@@ -55,6 +62,8 @@ public class UserView extends JFrame implements ViewInterface{
 	private JTextField bookIDCheckoutTextField;
 	private JTextField branchIDCheckoutTextField;
 	private JTextField cardNumberCheckoutTextField;
+	private JLabel errorMessageLabel;
+	private JTabbedPane tabbedPane;
 	
 	@Override
 	public String getBookID() {
@@ -105,10 +114,25 @@ public class UserView extends JFrame implements ViewInterface{
 	}
 	
 	@Override
-	public CheckOutData addBookSelectListener(MouseListener getDoubleClick) {
-		final CheckOutData checkoutData = new CheckOutData();
-		
-		return checkoutData;
+	public void addBookSelectListener(MouseListener getDoubleClick) {
+		searchTable.addMouseListener(getDoubleClick);
+	}
+	
+	@Override
+	public void resetTable(){
+		tableModel.setRowCount(0);
+	}
+	
+	@Override
+	public void getInfo(String info){
+		errorMessageLabel.setText(info);
+	}
+	
+	@Override
+	public void getCheckOutData(CheckOutData data){
+		tabbedPane.setSelectedIndex(1);
+		bookIDCheckoutTextField.setText(data.getBook_id());
+		branchIDCheckoutTextField.setText(data.getBranch_id());
 	}
 
 	/**
@@ -123,7 +147,7 @@ public class UserView extends JFrame implements ViewInterface{
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPanel.setLayout(new BorderLayout(0,0));
 		setContentPane(contentPanel);
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		contentPanel.add(tabbedPane, BorderLayout.CENTER);
 		
 		/*
@@ -134,15 +158,23 @@ public class UserView extends JFrame implements ViewInterface{
 		
 		JPanel searchOptoinsPanel = new JPanel();
 		searchOptoinsPanel.setBorder(BorderFactory.createTitledBorder("Enter criteria"));
-		//searchOptoinsPanel.setPreferredSize(new Dimension(getWidth(),getHeight()/13));
-		//searchOptoinsPanel.setMaximumSize(new Dimension(getWidth(),getHeight()/12));
 		searchPanel.add(searchOptoinsPanel);
 		
 		JPanel selectOptionsPanel = new JPanel();
 		selectOptionsPanel.setBorder(BorderFactory.createTitledBorder("Search or reset"));
-		//selectOptionsPanel.setPreferredSize(new Dimension(getWidth(),getHeight()/13));
-		//selectOptionsPanel.setMaximumSize(new Dimension(getWidth(),getHeight()/12));
 		searchPanel.add(selectOptionsPanel);
+		
+		JPanel messageBoardpanel = new JPanel();
+		messageBoardpanel.setBorder(BorderFactory.createTitledBorder("Messages"));
+		searchPanel.add(messageBoardpanel);
+		
+		JLabel infoLabel = new JLabel("Click on a book/row to chek it out");
+		infoLabel.setAlignmentX(LEFT_ALIGNMENT);
+		messageBoardpanel.add(infoLabel);
+		
+		errorMessageLabel = new JLabel("");
+		errorMessageLabel.setAlignmentY(RIGHT_ALIGNMENT);
+		messageBoardpanel.add(errorMessageLabel);
 		
 		JPanel tablePanel = new JPanel();
 		tablePanel.setBorder(BorderFactory.createTitledBorder("Table"));
@@ -264,12 +296,15 @@ public class UserView extends JFrame implements ViewInterface{
 		checkOutPanel.setLayout(new BorderLayout());
 		
 		JPanel checkoutOptionsPanel = new JPanel();
+		//checkoutOptionsPanel.setLayout(new BoxLayout(checkoutOptionsPanel,BoxLayout.Y_AXIS ));
 		checkOutPanel.add(checkoutOptionsPanel);
+		checkoutOptionsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		
 		JLabel bookIDCheckOutLabel = new JLabel("Book ID");
 		checkoutOptionsPanel.add(bookIDCheckOutLabel);
 		
 		bookIDCheckoutTextField = new JTextField();
+		bookIDCheckoutTextField.setSize(new Dimension(this.getWidth(),2));
 		checkoutOptionsPanel.add(bookIDCheckoutTextField);
 		bookIDCheckoutTextField.setColumns(10);
 		
@@ -277,6 +312,7 @@ public class UserView extends JFrame implements ViewInterface{
 		checkoutOptionsPanel.add(branchIDCheckoutLabel);
 		
 		branchIDCheckoutTextField = new JTextField();
+		branchIDCheckoutTextField.setSize(new Dimension(this.getWidth(),1));
 		checkoutOptionsPanel.add(branchIDCheckoutTextField);
 		branchIDCheckoutTextField.setColumns(10);
 		
@@ -284,8 +320,12 @@ public class UserView extends JFrame implements ViewInterface{
 		checkoutOptionsPanel.add(cardNoCheckoutLabel);
 		
 		cardNumberCheckoutTextField = new JTextField();
+		cardNumberCheckoutTextField.setSize(new Dimension(this.getWidth(),1));
 		checkoutOptionsPanel.add(cardNumberCheckoutTextField);
 		cardNumberCheckoutTextField.setColumns(10);
+		
+		JLabel checkOutInfoLabel = new JLabel("New label");
+		checkoutOptionsPanel.add(checkOutInfoLabel);
 		//checkOutPanel.setLayout(new FlowLayout());
 		
 		/*
