@@ -111,6 +111,37 @@ public class DataBaseQueryGenerator {
 		return rs;
 	}
 	
+	public ResultSet getCheckIns(String book_id,String card_no,String borrower_name)
+	{
+		ResultSet rs = null;
+		String resultQuery="SELECT DISTINCT loan_id,book_id,branch_id,card_no,borrower_name FROM "
+				+ "checkout_details WHERE date_in IS NULL AND ";
+		try{
+			Statement stmt = conn.createStatement();
+			if(book_id.isEmpty() && card_no.isEmpty() && borrower_name.isEmpty()  ) return null;
+			
+			if(!book_id.isEmpty())
+			{
+				resultQuery+= "book_id like '%"+book_id+"%' AND ";
+			}
+			if(!card_no.isEmpty())
+			{
+				resultQuery+= "card_no like '%"+card_no+"%' AND ";
+			}
+			if(!borrower_name.isEmpty())
+			{
+				resultQuery+= "borrower_name like '%"+borrower_name+"%' AND ";
+			}
+			resultQuery += "true ;";
+			rs = stmt.executeQuery(resultQuery);
+
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+		return rs;
+	}
+	
 	/*
 	 * Check if the given book_id is valid
 	 * @param String book_id 
@@ -262,7 +293,30 @@ public class DataBaseQueryGenerator {
 		return false;
 	}
 	
-	public void resetSchema()
+	public boolean CheckInBook(String loan_id, String date_in,String book_id,String branch_id)
+	{
+		try
+		{			Statement stmt = conn.createStatement();
+			String statement = "UPDATE book_loans SET Date_in = '"+date_in+"' WHERE loan_id ="+loan_id+"";
+			stmt.execute(statement);
+			//update number of books available
+			statement = "UPDATE book_copies SET no_available = no_available - 1 WHERE book_id = '"+book_id+"'"
+					+ " AND branch_id ='"+branch_id+"';";
+			stmt.execute(statement);
+			return true;
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+		return false;
+	}
+	
+	
+	
+	/*
+	 * clear the book loans table and reset available books to initial total copies
+	 */
+	public void resetToInitialState()
 	{
 		try
 		{
@@ -278,4 +332,5 @@ public class DataBaseQueryGenerator {
 			System.out.println("Error in connection: " + ex.getMessage());
 		}
 	}
+	
 }

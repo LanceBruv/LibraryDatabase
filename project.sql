@@ -229,3 +229,7 @@ GROUP BY book_id;
 CREATE VIEW user_checkouts AS
 SELECT card_no,count(*) AS no_checkouts FROM book_loans
 GROUP BY card_no;
+
+CREATE VIEW checkout_details AS
+SELECT book_id,branch_id,borrower.card_no,CONCAT(fname, ' ' ,lname) AS borrower_name
+FROM (BOOK_LOANS NATURAL JOIN BORROWER);

@@ -3,6 +3,7 @@ package view;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 
+import model.CheckInData;
 import model.CheckOutData;
 
 public interface ViewInterface {
@@ -21,9 +22,11 @@ public interface ViewInterface {
 
 	public boolean getDetailedSelection();
 
-	public void addTableRow(Object[] data);
+	public void addSearchTableRow(Object[] data);
+	
+	public void addCheckInTableRow(Object[] data);
 
-	public void addUserInputListener(ActionListener action);
+	public void searchBooksInputListener(ActionListener action);
 	
 	public void addBookSelectListener(MouseListener getDoubleClick);
 	
@@ -35,7 +38,17 @@ public interface ViewInterface {
 	
 	public void addCheckOutListener(ActionListener action);
 	
+	public void addCheckInListener(ActionListener action);
+	
 	public CheckOutData getCheckOutData();
 	
 	public void setCheckOutPaneInfo(String info);
+	
+	public void searchCheckInsInputListener(ActionListener action);
+	
+	public CheckInData getCheckInData();
+	
+	public void checkInInfo(String info);
+	
+	public CheckInData getCheckInSearchData();
 }

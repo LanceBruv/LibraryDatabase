@@ -23,10 +23,32 @@ public class LibraryController {
 		this.theView = view;
 		this.qGen = generate;
 		
-		this.theView.addUserInputListener(new PopulateData());
+		this.theView.searchBooksInputListener(new PopulateData());
 		this.theView.addBookSelectListener(new TableClickData());
 		this.theView.addCheckOutListener(new CheckOutClickData());
+		this.theView.searchCheckInsInputListener(new CheckInSearchData());
+		this.theView.addCheckInListener(new CheckInToDatabase());
 	}
+	
+	
+	class CheckInToDatabase implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			CheckInData data = theView.getCheckInData();
+			if(data != null){
+				if(qGen.CheckInBook(data.getLoan_ID(), data.getCheckInDate(), data.getBook_id(), data.getBranch_id())){
+					theView.checkInInfo("Successfully checked in");
+				}
+				else{
+					theView.checkInInfo("Error checking in");
+				}
+			}
+			
+		}
+		
+	}
+	
 	
 	/*
 	 * Check out book
@@ -142,7 +164,7 @@ public class LibraryController {
 					while(booksSet.next()){
 						Object[] rowData = {booksSet.getString("book_id"),booksSet.getString("title"),booksSet.getString("author_list"),
 								booksSet.getString("branch_id"),booksSet.getString("no_of_copies"),booksSet.getInt("no_available")};
-						theView.addTableRow(rowData);
+						theView.addSearchTableRow(rowData);
 						}
 					}
 				}
@@ -152,5 +174,28 @@ public class LibraryController {
 		}
 		
 	}
+	
+	class CheckInSearchData implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			theView.resetTable();
+			ResultSet checkInSet;
+			try{
+				CheckInData data = theView.getCheckInSearchData();
+				checkInSet = qGen.getCheckIns(data.getBook_id(), data.getCardNumber(),data.getBorrowerName());
+				while(checkInSet.next()){
+					Object[] rowData = {checkInSet.getString("loan_id"),checkInSet.getString("book_id"),checkInSet.getString("branch_id"),
+							checkInSet.getString("card_no"),checkInSet.getString("borrower_name")};
+					theView.addCheckInTableRow(rowData);
+				}
+			}
+			catch(Exception e1){
+
+			}
+		}
+		
+	}
+	
 	 
 }
