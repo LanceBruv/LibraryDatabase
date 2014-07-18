@@ -59,6 +59,7 @@ before insert on book_loans
 for each row 
 set new.due_date = Date_Add(due_date,INTERVAL 14 DAY);
 
+--denormalize authors
 create trigger full_name
 before insert on book_authors
 for each row
@@ -218,7 +219,7 @@ FROM (book_copies NATURAL JOIN num_checked_out);
 
 
 --drop temp authors as its not in 1NF
-DROP TABLE temp_authors;
+DROP TABLE temp_author;
 --create a view for combined authors
 CREATE VIEW combined_authors AS
 SELECT book_id,title, GROUP_CONCAT(author_name SEPARATOR ',') AS author_list
@@ -233,3 +234,53 @@ GROUP BY card_no;
 CREATE VIEW checkout_details AS
 SELECT book_id,branch_id,borrower.card_no,CONCAT(fname, ' ' ,lname) AS borrower_name
 FROM (BOOK_LOANS NATURAL JOIN BORROWER);
+
+--create table fines
+create table fines
+(loan_id INT,
+fine NUMERIC(7,2),
+paid TINYINT(1),
+PRIMARY KEY(loan_id),
+FOREIGN KEY (loan_id) REFERENCES book_loans(loan_id)
+);
+
+alter table fines 
+alter column paid 
+set default 0;
+
+--load book_loans table
+LOAD DATA LOCAL INFILE 'C:/Users/Ajay/Desktop/book_loans.csv'
+INTO TABLE book_loans
+FIELDS TERMINATED BY '\t'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(loan_id,book_id,branch_id, card_no, date_out,due_date,@date_in)
+SET date_in = nullif(@date_in,'NULL')
+;
+
+--new fine entry
+create view new_fines as
+select loan_id,date_in,date_out,due_date, datediff(ifNULL((date_in),curdate()),date_out) as delay from book_loans
+WHERE datediff(ifNULL((date_in),curdate()),date_out) > 14 AND
+loan_id NOT IN (SELECT loan_id from fines);
+
+--update entry
+create view fines_to_update as
+select loan_id,date_in,date_out,due_date, datediff(ifNULL((date_in),curdate()),date_out) as delay from book_loans
+WHERE datediff(ifNULL((date_in),curdate()),date_out) > 14 AND
+loan_id IN (SELECT loan_id from fines where paid = 0);
+
+--insert new records into fines table
+INSERT INTO fines (loan_id,fine,paid)
+SELECT loan_id,delay*0.25,'0'
+FROM new_fines;
+
+--update records in fines table
+UPDATE fines AS table1, (select * from fines_to_update) as table2
+SET fine =  0.25* datediff(ifNULL((table2.date_in),curdate()),table2.date_out)
+WHERE table1.loan_id = table2.loan_id;
+
+--data to be sent to the GUI fines table
+SELECT book_loans.card_no,SUM(fine) as total_fine,IF(paid = 1,'True','False') as has_paid FROM
+(fines NATURAL JOIN book_loans)
+GROUP BY card_no,paid;
