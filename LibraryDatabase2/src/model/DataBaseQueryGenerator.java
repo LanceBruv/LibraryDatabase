@@ -5,6 +5,7 @@ import java.sql.*;
 public class DataBaseQueryGenerator {
 
 	static Connection conn = null;
+	
 
 	public DataBaseQueryGenerator() {
 		try
@@ -114,7 +115,7 @@ public class DataBaseQueryGenerator {
 	public ResultSet getCheckIns(String book_id,String card_no,String borrower_name)
 	{
 		ResultSet rs = null;
-		String resultQuery="SELECT DISTINCT loan_id,book_id,branch_id,card_no,borrower_name FROM "
+		String resultQuery="SELECT loan_id,book_id,branch_id,card_no,borrower_name FROM "
 				+ "checkout_details WHERE date_in IS NULL AND ";
 		try{
 			Statement stmt = conn.createStatement();
@@ -230,7 +231,7 @@ public class DataBaseQueryGenerator {
 			if(rs.next())
 			{
 				int no_ofCheckouts = Integer.parseInt(rs.getString("no_checkouts"));
-				return(no_ofCheckouts <3);
+				return(no_ofCheckouts < 3);
 			}
 			
 		}
@@ -274,12 +275,8 @@ public class DataBaseQueryGenerator {
 	{
 		try
 		{			Statement stmt = conn.createStatement();
-			String statement = "INSERT INTO book_loans (book_id,branch_id,card_no) "
-					+ "VALUES ('"+book_id+"','"+branch_id+"','"+card_no+"');";
-			stmt.execute(statement);
-			//update due date
-			statement = "UPDATE book_loans SET due_date = due_date+ INTERVAL 14 DAY WHERE book_id = '"+book_id+"'"
-					+ " AND branch_id ='"+branch_id+"' AND card_no = '"+card_no+"';";
+			String statement = "INSERT INTO book_loans (book_id,branch_id,card_no,date_out,due_date) "
+					+ "VALUES ('"+book_id+"','"+branch_id+"','"+card_no+"',CURDATE(),DATE_ADD(CURDATE(),INTERVAL 14 DAY));";
 			stmt.execute(statement);
 			//update number of books available
 			statement = "UPDATE book_copies SET no_available = no_available - 1 WHERE book_id = '"+book_id+"'"
@@ -300,7 +297,7 @@ public class DataBaseQueryGenerator {
 			String statement = "UPDATE book_loans SET Date_in = '"+date_in+"' WHERE loan_id ="+loan_id+"";
 			stmt.execute(statement);
 			//update number of books available
-			statement = "UPDATE book_copies SET no_available = no_available - 1 WHERE book_id = '"+book_id+"'"
+			statement = "UPDATE book_copies SET no_available = no_available + 1 WHERE book_id = '"+book_id+"'"
 					+ " AND branch_id ='"+branch_id+"';";
 			stmt.execute(statement);
 			return true;
@@ -311,6 +308,32 @@ public class DataBaseQueryGenerator {
 		return false;
 	}
 	
+	public boolean AddBorrower(String fname,String lname, String address, String city, String state,String phone){
+		try{
+			Statement stmt = conn.createStatement();
+			String statement = "INSERT INTO borrower (fname,lname,address,city,state,phone)"
+					+ " VALUES ('"+fname+"','"+lname+"','"+address+"','"+city+"','"+state+"','"+phone+"');";
+			stmt.execute(statement);
+			return true;
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+		return false;
+	}
+	
+	public boolean CheckIfBorrowerExists(String fname,String lname,String address){
+		try{
+			Statement stmt = conn.createStatement();
+			String statement = "SELECT * FROM borrower WHERE fname ='"+fname+"' AND lname = '"+lname+"' AND address = '"+address+"';";
+			ResultSet rs = stmt.executeQuery(statement);
+			return (rs.next());
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+		return false;
+	}
 	
 	
 	/*
@@ -321,11 +344,13 @@ public class DataBaseQueryGenerator {
 		try
 		{
 			Statement stmt = conn.createStatement();
-			String statement = "UPDATE book_copies SET available_copies = no_of_copies";
+			String statement = "UPDATE book_copies SET no_available = no_of_copies";
 			stmt.execute(statement);
 			statement = "DELETE FROM book_loans";
 			stmt.execute(statement);
 			statement = "ALTER TABLE book_loans AUTO_INCREMENT = 1";
+			stmt.execute(statement);
+			statement = "DELETE FROM borrower WHERE card_no > 9041";
 			stmt.execute(statement);
 		}
 		catch(SQLException ex) {
@@ -333,4 +358,68 @@ public class DataBaseQueryGenerator {
 		}
 	}
 	
+	public void updateFinesTable()
+	{
+		try{
+			Statement stmt = conn.createStatement();
+			//new entries to be added into fines table
+			String query = "INSERT INTO fines (loan_id,fine,paid) "
+					+ "SELECT loan_id,delay*0.25,'0' FROM new_fines;";
+			stmt.execute(query);
+			//update entries
+			query = "UPDATE fines AS table1, (select * from fines_to_update) as table2 "
+					+ "SET fine =  0.25* datediff(ifNULL((table2.date_in),curdate()),table2.date_out) "
+					+ "WHERE table1.loan_id = table2.loan_id;";
+			stmt.execute(query);
+			
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+	}
+	
+	public ResultSet getFinesData(boolean unPaidOnly)
+	{
+		ResultSet rs = null;
+		String query = "SELECT book_loans.card_no,SUM(fine) as total_fine,IF(paid = 1,'Paid','Not Paid') as has_paid "
+				+ "FROM (fines NATURAL JOIN book_loans) ";
+		if(unPaidOnly){
+			query += "WHERE paid = 0 ";
+		}
+		query += " GROUP BY card_no,paid;";
+		try{
+			Statement stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+		return rs;
+	}
+	
+	public boolean doesUserHaveCheckout(String card_no){
+		ResultSet rs = null;
+		String query = "SELECT * FROM book_loans where card_no ='"+card_no+"' AND Date_in is NULL;";
+		try{
+			Statement stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			return (rs.next());
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+		return false;//won't read on good execution
+	}
+	
+	
+	public void makePayment(String card_no){
+		String query = "UPDATE fines SET paid = 1 WHERE loan_id IN  (SELECT loan_id FROM book_loans WHERE card_no ='"+card_no+"');";
+		try{
+			Statement stmt = conn.createStatement();
+			stmt.execute(query);
+		}
+		catch(SQLException ex) {
+			System.out.println("Error in connection: " + ex.getMessage());
+		}
+	}
 }

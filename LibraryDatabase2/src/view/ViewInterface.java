@@ -3,6 +3,7 @@ package view;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 
+import model.BorrowerData;
 import model.CheckInData;
 import model.CheckOutData;
 
@@ -44,6 +45,8 @@ public interface ViewInterface {
 	
 	public void setCheckOutPaneInfo(String info);
 	
+	public void borrowerPanelInfo(String info);
+	
 	public void searchCheckInsInputListener(ActionListener action);
 	
 	public CheckInData getCheckInData();
@@ -51,4 +54,23 @@ public interface ViewInterface {
 	public void checkInInfo(String info);
 	
 	public CheckInData getCheckInSearchData();
+	
+	public BorrowerData getBorrowerData();
+	
+	public void addBorrowerListener(ActionListener action);
+	
+	public void getFinesListener(ActionListener action);
+	
+	public void addFinesTableRow(Object[] data);
+	
+	public String finePaymentData();
+	
+	public void payFineListener(ActionListener action);
+	
+	public void payFineInfo(String info);
+	
+	public void resetDisplay();
+	
+	public boolean getUnpaidOnlyCheckBox();
+	
 }

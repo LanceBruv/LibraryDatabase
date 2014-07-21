@@ -5,7 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -28,8 +27,79 @@ public class LibraryController {
 		this.theView.addCheckOutListener(new CheckOutClickData());
 		this.theView.searchCheckInsInputListener(new CheckInSearchData());
 		this.theView.addCheckInListener(new CheckInToDatabase());
+		this.theView.addBorrowerListener(new BorrowerInsertData());
+		this.theView.getFinesListener(new UpdateFinesData());
+		this.theView.payFineListener(new FinePayment());
+	}
+
+	class FinePayment implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String card_no = theView.finePaymentData();
+			if(card_no==null){
+				theView.payFineInfo("Please make a choice");
+				return;
+			}
+			else if(qGen.doesUserHaveCheckout(card_no)){
+				//check if the card_no has any check outs
+				theView.payFineInfo("Cannot pay! User has checkouts");
+			}
+			else{
+				qGen.makePayment(card_no);
+				theView.payFineInfo("Payment completed");
+			}
+		}
+
+	}
+
+	class UpdateFinesData implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+		qGen.updateFinesTable();
+		ResultSet fineSet;
+		fineSet = qGen.getFinesData(theView.getUnpaidOnlyCheckBox());
+		try{
+			theView.resetDisplay();
+				while(fineSet.next()){
+					Object[] rowData = {fineSet.getString("card_no"),fineSet.getString("total_fine"),fineSet.getString("has_paid")};
+					theView.addFinesTableRow(rowData); 
+				}
+			}
+			catch(SQLException e1){
+				System.out.println(e1.getMessage());
+			}
+		}
+		
 	}
 	
+	class BorrowerInsertData implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			BorrowerData data = theView.getBorrowerData();
+			if(data.getFname().equals("") || data.getLname().equals("") || data.getAddress().equals("")){
+				theView.borrowerPanelInfo("First, Last name and Address required");
+				return;
+			}
+			else if(qGen.CheckIfBorrowerExists(data.getFname(), data.getLname(), data.getAddress())){
+				theView.borrowerPanelInfo("User already exists");
+				return;
+			}
+			else{
+				
+				if(qGen.AddBorrower(data.getFname(), data.getLname(), data.getAddress(), data.getCity(), data.getState(), data.getPhone())){
+					theView.borrowerPanelInfo("Successfully added");
+				}
+				else{
+					theView.borrowerPanelInfo("Errro adding user");
+				}
+			}
+			
+		}
+		
+	}
 	
 	class CheckInToDatabase implements ActionListener{
 
@@ -39,6 +109,7 @@ public class LibraryController {
 			if(data != null){
 				if(qGen.CheckInBook(data.getLoan_ID(), data.getCheckInDate(), data.getBook_id(), data.getBranch_id())){
 					theView.checkInInfo("Successfully checked in");
+					theView.resetDisplay();
 				}
 				else{
 					theView.checkInInfo("Error checking in");
@@ -76,6 +147,7 @@ public class LibraryController {
 			}
 			if(qGen.CheckOutBook(data.getBook_id(), data.getBranch_id(), data.getCardNumber())){
 				theView.setCheckOutPaneInfo("Successfully checked out");
+				theView.resetTable();
 				return;
 			}
 			theView.setCheckOutPaneInfo("Error checking out");
@@ -153,7 +225,7 @@ public class LibraryController {
 				
 			}
 			catch(Exception e1){
-				
+				System.out.println(e1.getMessage());
 			}
 			
 		}

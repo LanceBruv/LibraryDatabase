@@ -284,3 +284,19 @@ WHERE table1.loan_id = table2.loan_id;
 SELECT book_loans.card_no,SUM(fine) as total_fine,IF(paid = 1,'True','False') as has_paid FROM
 (fines NATURAL JOIN book_loans)
 GROUP BY card_no,paid;
+
+--pay user fines
+UPDATE fines SET paid = 1
+WHERE loan_id IN 
+(SELECT loan_id FROM book_loans WHERE card_no = 9034);
+
+-- drop fines table Foreign key constraint and add it again
+-- this time with ON DELETE CASCADE
+ALTER TABLE fines DROP FOREIGN KEY fines_ibfk_1;
+ALTER TABLE fines ADD CONSTRAINT fk_loan_id_constraint FOREIGN KEY 
+(loan_id) REFERENCES book_loans(loan_id) ON DELETE CASCADE;
+
+--update user_checkouts (bug fix)
+SELECT card_no,count(*) AS no_checkouts FROM book_loans
+WHERE date_in IS NULL
+GROUP BY card_no 

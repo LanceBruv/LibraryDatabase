@@ -4,15 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Point;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
@@ -24,34 +20,17 @@ import javax.swing.JTabbedPane;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.JCheckBox;
-
 import java.util.Calendar;
-import java.util.Date;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.awt.event.ItemEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-
 import javax.swing.JTable;
-
+import model.BorrowerData;
 import model.CheckInData;
 import model.CheckOutData;
-
-import javax.swing.SwingConstants;
-
 import java.awt.GridLayout;
-import java.awt.CardLayout;
-
-import javax.swing.SpringLayout;
-
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.RowSpec;
-
-import javax.swing.JSplitPane;
 import javax.swing.JComboBox;
 
 public class UserView extends JFrame implements ViewInterface{
@@ -83,7 +62,6 @@ public class UserView extends JFrame implements ViewInterface{
 	private JLabel checkOutInfoLabel;
 	private JTable checkInTable;
 	private DefaultTableModel checkInTableModel;
-	private JTable table_1;
 	private JTextField checkInCardNoTextField;
 	private JTextField checkInBookIDTextField;
 	private JTextField checkInBorrowerNameTextField;
@@ -93,6 +71,20 @@ public class UserView extends JFrame implements ViewInterface{
 	private JComboBox<String> monthCombo;
 	private JComboBox<Integer> yearCombo;
 	private JLabel checkInInfoLabel;
+	private JTextField borrowerFnameTextField;
+	private JTextField borrowerlnameTextField;
+	private JTextField borrowerAddressTextField;
+	private JTextField borrowerCityTextField;
+	private JTextField borrowerStateTextField;
+	private JTextField borrowerPhoneNumberTextField;
+	private JButton borrowerAddUserButton;
+	private JLabel borrowerInfoLabel1;
+	private DefaultTableModel finesTableModel;
+	private JTable finesInTable;
+	private JButton getFinesButton;
+	private JLabel fineInfoLabel;
+	private JButton payFineButton;
+	private JCheckBox AllFInesCheckBox;
 
 	@Override
 	public String getBookID() {
@@ -133,7 +125,7 @@ public class UserView extends JFrame implements ViewInterface{
 	public void addSearchTableRow(Object[] data){
 		serachTableModel.addRow(data);
 	}
-	
+
 	@Override
 	public void addCheckInTableRow(Object[] data){
 		checkInTableModel.addRow(data);
@@ -160,6 +152,7 @@ public class UserView extends JFrame implements ViewInterface{
 	@Override
 	public void resetTable(){
 		serachTableModel.setRowCount(0);
+		checkInTableModel.setRowCount(0);
 	}
 
 	@Override
@@ -178,10 +171,15 @@ public class UserView extends JFrame implements ViewInterface{
 	public void addCheckOutListener(ActionListener action){
 		checkOutButton.addActionListener(action);
 	}
-	
+
 	@Override
 	public void addCheckInListener(ActionListener action){
 		checkInButton.addActionListener(action);
+	}
+
+	@Override
+	public void addBorrowerListener(ActionListener action){
+		borrowerAddUserButton.addActionListener(action);
 	}
 
 	@Override
@@ -197,7 +195,7 @@ public class UserView extends JFrame implements ViewInterface{
 	public void setCheckOutPaneInfo(String info){
 		checkOutInfoLabel.setText(info);
 	}
-	
+
 	@Override
 	public CheckInData getCheckInData(){
 		int row = checkInTable.getSelectedRow();
@@ -209,13 +207,13 @@ public class UserView extends JFrame implements ViewInterface{
 			data.setBook_id((String)checkInTable.getModel().getValueAt(row, 1));
 			data.setBranch_id((String)checkInTable.getModel().getValueAt(row, 2));
 			data.setLoan_ID((String)checkInTable.getModel().getValueAt(row, 0));
-			String date_in = yearCombo.getSelectedItem()+"-"+monthCombo.getSelectedItem()+"-"+dateCombo.getSelectedItem()+" 12:00:00";
+			String date_in = yearCombo.getSelectedItem()+"-"+monthCombo.getSelectedItem()+"-"+dateCombo.getSelectedItem()+"";
 			data.setCheckInDate(date_in);
 			return data;
 		}
 		return null;
 	}
-	
+
 	@Override 
 	public CheckInData getCheckInSearchData(){
 		CheckInData data = new CheckInData();
@@ -224,12 +222,70 @@ public class UserView extends JFrame implements ViewInterface{
 		data.setBorrowerName(checkInBorrowerNameTextField.getText());
 		return data;
 	}
-	
+
 	@Override
 	public void checkInInfo(String info){
 		checkInInfoLabel.setText(info);
 	}
 
+	@Override
+	public void borrowerPanelInfo(String info){
+		borrowerInfoLabel1.setText(info);
+	}
+
+	@Override
+	public BorrowerData getBorrowerData(){
+		BorrowerData data = new BorrowerData();
+		data.setFname(borrowerFnameTextField.getText());
+		data.setLname(borrowerlnameTextField.getText());
+		data.setAddress(borrowerAddressTextField.getText());
+		data.setCity(borrowerCityTextField.getText());
+		data.setState(borrowerStateTextField.getText());
+		data.setPhone(borrowerPhoneNumberTextField.getText());
+		return data;
+	}
+
+	@Override
+	public void getFinesListener(ActionListener action){
+		getFinesButton.addActionListener(action);
+	}
+
+	@Override
+	public void addFinesTableRow(Object[] data){
+		finesTableModel.addRow(data);
+	}
+
+	@Override
+	public String finePaymentData(){
+		int row = finesInTable.getSelectedRow();
+		if( row == -1){
+			fineInfoLabel.setText("Please make a selection");
+		}
+		else{
+			return (String)finesInTable.getModel().getValueAt(row, 0);
+		}
+		return null;
+	}
+
+	@Override
+	public void payFineListener(ActionListener action){
+		payFineButton.addActionListener(action);
+	}
+
+	@Override
+	public void payFineInfo(String info){
+		fineInfoLabel.setText(info);
+	}
+
+	@Override
+	public void resetDisplay(){
+		resetText();
+	}
+	
+	@Override
+	public boolean getUnpaidOnlyCheckBox(){
+		return AllFInesCheckBox.isSelected();
+	}
 	/**
 	 * Create the frame.
 	 */
@@ -254,8 +310,11 @@ public class UserView extends JFrame implements ViewInterface{
 				else if(index == 1){
 					frame.setSize(400,250);
 				}
-				else if(index == 2){
+				else if(index == 2 || index == 4){
 					frame.setSize(700,600);
+				}
+				else if(index == 3){
+					frame.setSize(400,400);
 				}
 			}
 		});
@@ -501,7 +560,7 @@ public class UserView extends JFrame implements ViewInterface{
 
 		JButton checkInResetButton = new JButton("Reset");
 		checkInSearchButtonsPanel.add(checkInResetButton);
-		
+
 		checkInInfoLabel = new JLabel("Select value from table, select date and check in");
 		checkInSearchButtonsPanel.add(checkInInfoLabel);
 
@@ -524,14 +583,14 @@ public class UserView extends JFrame implements ViewInterface{
 		JPanel checkInButtonsPanel = new JPanel();
 		checkInPanel.add(checkInButtonsPanel);
 		checkInButtonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
-		
-		Calendar now = Calendar.getInstance();
 
+		Calendar now = Calendar.getInstance();
+	
 		String months[] ={"01","02","03","04","05","06","07","08","09","10","11","12"};
 		monthCombo = new JComboBox<String>(months);
 		monthCombo.setSelectedIndex(now.get(Calendar.MONTH));
 		dateSelectPanel.add(monthCombo);
-		
+
 		String Dates[] ={"01","02","03","04","05","06","07","08","09","10","11","12",
 				"13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"};
 		dateCombo = new JComboBox<String>(Dates);
@@ -542,21 +601,21 @@ public class UserView extends JFrame implements ViewInterface{
 		yearCombo = new JComboBox<Integer>(years);
 		yearCombo.setSelectedItem(now.get(Calendar.YEAR));
 		dateSelectPanel.add(yearCombo);
-	
+	 
 		checkInButton = new JButton("Check In");
 		checkInButtonsPanel.add(checkInButton);
 
 		checkInSearchButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				resizeColumnWidth(checkInTable);
-				
+				checkInInfoLabel.setText("Select value from table, select date and check in");
 			}
 		});
 
 		checkInResetButton.addActionListener(new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				resetText();
@@ -570,8 +629,109 @@ public class UserView extends JFrame implements ViewInterface{
 
 		JPanel borrowerPanel = new JPanel();
 		tabbedPane.addTab("Borrower", null, borrowerPanel, null);
+		borrowerPanel.setLayout(new GridLayout(8, 2, 0, 0));
+
+		JLabel borrowerFnameLabel = new JLabel(" First Name");
+		borrowerPanel.add(borrowerFnameLabel);
+
+		borrowerFnameTextField = new JTextField();
+		borrowerPanel.add(borrowerFnameTextField);
+		borrowerFnameTextField.setColumns(10);
+
+		JLabel borrowerLastNameLabel = new JLabel(" Last Name");
+		borrowerPanel.add(borrowerLastNameLabel);
+
+		borrowerlnameTextField = new JTextField();
+		borrowerPanel.add(borrowerlnameTextField);
+		borrowerlnameTextField.setColumns(10);
+
+		JLabel borrowerAddressLabel = new JLabel(" Address");
+		borrowerPanel.add(borrowerAddressLabel);
+
+		borrowerAddressTextField = new JTextField();
+		borrowerPanel.add(borrowerAddressTextField);
+		borrowerAddressTextField.setColumns(10);
+
+		JLabel borrowerPhoneLabel = new JLabel(" Phone Number");
+		borrowerPanel.add(borrowerPhoneLabel);
+
+		borrowerPhoneNumberTextField = new JTextField();
+		borrowerPanel.add(borrowerPhoneNumberTextField);
+		borrowerPhoneNumberTextField.setColumns(10);
+
+		JLabel borrowerStateLabel = new JLabel(" State");
+		borrowerPanel.add(borrowerStateLabel);
+
+		borrowerStateTextField = new JTextField();
+		borrowerPanel.add(borrowerStateTextField);
+		borrowerStateTextField.setColumns(10);
+
+		JLabel borrowerCityLabel = new JLabel(" City");
+		borrowerPanel.add(borrowerCityLabel);
+
+		borrowerCityTextField = new JTextField();
+		borrowerPanel.add(borrowerCityTextField);
+		borrowerCityTextField.setColumns(10);
+
+		borrowerInfoLabel1 = new JLabel("");
+		borrowerPanel.add(borrowerInfoLabel1);
+
+		JLabel borrowerInfoLabel2 = new JLabel("");
+		borrowerPanel.add(borrowerInfoLabel2);
+
+		borrowerAddUserButton = new JButton("Add");
+		borrowerPanel.add(borrowerAddUserButton);
+
+		JButton borrowerResetButton = new JButton("Reset");
+		borrowerPanel.add(borrowerResetButton);
+
+		borrowerResetButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				resetText();
+
+			}
+		});
+
+		/*
+		 * Fines table
+		 */
+
+		JPanel finesPanel = new JPanel();
+		tabbedPane.addTab("Fines", null, finesPanel, null);
+		finesPanel.setLayout(new BoxLayout(finesPanel, BoxLayout.Y_AXIS));
+
+		JPanel finesOptionsPanel = new JPanel();
+		finesPanel.add(finesOptionsPanel);
+		finesOptionsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+
+		getFinesButton = new JButton("Get Fines / Refresh");
+		finesOptionsPanel.add(getFinesButton);
+
+		AllFInesCheckBox = new JCheckBox("Show only unpaid");
+		finesOptionsPanel.add(AllFInesCheckBox);
 		setVisible(true);
 
+		JPanel fineTablePane = new JPanel();
+		finesPanel.add(fineTablePane);
+
+		Object[] finesColumnNames = {"Card Number","Fine Amount", "Paid/Not paid"};
+		finesTableModel = new DefaultTableModel(finesColumnNames,0 );
+
+		finesInTable = new JTable(finesTableModel);
+
+		JScrollPane finesScrollPane = new JScrollPane(finesInTable);
+		fineTablePane.add(finesScrollPane);
+
+		JPanel fineOptionsPanel = new JPanel();
+		finesPanel.add(fineOptionsPanel);
+
+		payFineButton = new JButton("Pay Fine");
+		fineOptionsPanel.add(payFineButton);
+
+		fineInfoLabel = new JLabel("make a selection and hit pay fine");
+		fineOptionsPanel.add(fineInfoLabel);
 	}
 
 	private void resetText(){
@@ -589,12 +749,20 @@ public class UserView extends JFrame implements ViewInterface{
 		checkInBookIDTextField.setText("");
 		checkInBorrowerNameTextField.setText("");
 		checkInCardNoTextField.setText("");
+		borrowerAddressTextField.setText("");
+		borrowerCityTextField.setText("");
+		borrowerFnameTextField.setText("");
+		borrowerlnameTextField.setText("");
+		borrowerPhoneNumberTextField.setText("");
+		borrowerStateTextField.setText("");
+		finesTableModel.setRowCount(0);
+		checkOutInfoLabel.setText("");
 	}
 
 	public void resizeColumnWidth(JTable table) {
 		final TableColumnModel columnModel = table.getColumnModel();
 		for (int column = 0; column < table.getColumnCount(); column++) {
-			int width = 50; // Min width
+			int width = 50; // Minimum width
 			for (int row = 0; row < table.getRowCount(); row++) {
 				TableCellRenderer renderer = table.getCellRenderer(row, column);
 				Component comp = table.prepareRenderer(renderer, row, column);
